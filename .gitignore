@@ -1,0 +1,189 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# If you are using the sqlite database:
+db.sqlite3
+
+# If you are using SQLite for unit tests:
+db_test.sqlite3
+
+# Django migrations
+*/migrations/*
+
+# Logs and local environment files
+*.log
+.env
+.env.local
+.env.*.local
+.envrc
+*.env
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.Python
+.pytest_cache/
+pip-log.txt
+
+# If you're using pyenv
+.python-version
+
+# Editor and IDE settings
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Docker related files
+docker-compose.override.yml
+docker-compose.*.yml
+.dockerignore
+*.orig
+*.swp
+*.swo
+
+# Python dependencies
+*.egg-info/
+.eggs/
+lib/
+lib64/
+build/
+dist/
+__pycache__/
+
+# Distribution / packaging
+*.egg
+*.whl
+*.deb
+*.tar.gz
+*.zip
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Sphinx documentation
+docs/_build/
+target/
+
+# Environments
+.env.bak
+*.env
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# pytest
+.cache/
+
+# Coverage reports
+coverage/
+
+# MyPy cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Local development artifacts
+instance/
+.webassets-cache
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+*.pid
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*~
+
+# Static files
+staticfiles/
+static/
+
+# Media files
+media/
+
+# If you are using a custom static files directory
+staticfiles_dirs/
+
+# Pycharm files
+.idea/
+
+# JetBrains related
+.idea/
+out/
+
+# Local virtualenv
+local/
+
+# System files
+*.orig
+
+# PIP files
+pip-log.txt
+
+# Jinja2 compiled files
+*.j2c
+
+# Editor directories and files
+.vscode/
+*.code-workspace
+*.sublime-workspace
+*.sublime-project
+
+# Docker files
+.dockerignore
+docker-compose.override.yml
+
+# Local docker environment
+.env.docker
+docker-compose.yml
+
+# Pyenv
+.python-version
+
+# IntelliJ IDEA
+.idea/
+
+# macOS Finder
+.DS_Store
+
