@@ -3,13 +3,12 @@ from .models import App, Token
 import json
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import authenticate, User
 
 MAX_DATA_SIZE = 1024 
 VALID_STATES = {"starting", "running", "error", "offline"}
-@csrf_exempt
 
 # Create your views here.
+@csrf_exempt
 def create(request):
     if request.method == 'POST':
         if len(request.body) > MAX_DATA_SIZE:
@@ -89,7 +88,7 @@ def dispatcher(request, app_id):
         app.delete()
         return JsonResponse({})
 
-    else: return JsonResponse({"error": "Invalid method"}, status=405)
+    return JsonResponse({"error": "Invalid method"}, status=405)
 
 
 def list(request):
@@ -109,39 +108,3 @@ def list(request):
 
         return JsonResponse({"results": results})
     return JsonResponse({"error": "Invalid method"}, status=405)
-
-
-def login(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        username = data.get("username")
-        password = data.get("password")
-
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            token = Token.generate_token(user)
-            return JsonResponse({"token": token.key}, status=200)
-        
-        return JsonResponse({"error": "Invalid user"}, status=401)
-    
-    return JsonResponse({"error": "Invalid method"}, status=405)
-
-
-def signup(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        username = data.get("username")
-        password = data.get("password")
-
-        if not username or not password:
-            return JsonResponse({"error": "Username and password are required"}, status=400)
-
-        if User.objects.filter(username=username).exists():
-            return JsonResponse({"error": "User already exists"}, status=400)
-
-        user = User.objects.create_user(username=username, password=password)
-        user.save()
-        return JsonResponse({"message": "User created successfully"}, status=201)
-    
-    return JsonResponse({"error": "Invalid method"}, status=405)
-    
