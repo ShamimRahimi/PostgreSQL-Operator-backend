@@ -3,17 +3,31 @@ from .models import App
 import json
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+MAX_DATA_SIZE = 1024 
+VALID_STATES = {"starting", "running", "error", "offline"}
 @csrf_exempt
-
 
 # Create your views here.
 def create(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
+        if len(request.body) > MAX_DATA_SIZE:
+            return JsonResponse({"error": "Payload too large"}, status=400)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
         name = data.get("name")
+        if not name or not isinstance(name, str) or len(name.strip()) == 0:
+            return JsonResponse({"error": "Invalid 'name' field"}, status=400)
+        
         state = data.get("state", "offline")
+        if state not in VALID_STATES:
+            return JsonResponse({"error": "Invalid 'name' field"}, status=400)
+        
         size = data.get("size")
-        print(name)
+        if size is None or not isinstance(size, int) or size <= 0:
+            return JsonResponse({"error": "Invalid 'size' field. Must be a positive integer."}, status=400)
 
         app = App(name=name, size=size, state=state)
         app.save()
@@ -26,14 +40,19 @@ def create(request):
                 'creation_time': app.creation_time
             }
 
+        
+        print(response_data)
         return JsonResponse(response_data, status=200)
     return JsonResponse({"error": "Invalid method"}, status=405)
 
 
 def dispatcher(request, app_id):
     if request.method == 'GET':
-        app = App.objects.get(id=app_id)
-
+        try:
+            app = App.objects.get(id=app_id)
+        except App.DoesNotExist:
+            return JsonResponse({"error": "App not found"}, status=404)
+        
         response_data = {
             'id': app.id,
             'name': app.name,
@@ -47,6 +66,8 @@ def dispatcher(request, app_id):
     elif request.method == 'PUT':
         app = App.objects.get(id=app_id)
         data = json.loads(request.body)
+        if data.get("size") is None or not isinstance(data.get("size"), int) or data.get("size") <= 0:
+            return JsonResponse({"error": "Invalid 'size' field. Must be a positive integer."}, status=400)
         app.size = data.get("size")
         app.save()
 
@@ -85,15 +106,4 @@ def list(request):
 
         return JsonResponse({"results": results})
     return JsonResponse({"error": "Invalid method"}, status=405)
-
-# def update(request, app_id):
-#     if request.method == 'PUT':
-       
-#     # return JsonResponse({"error": "Invalid method"}, status=405)
-
-# @csrf_exempt
-# def delete(request, app_id):
-#     if request.method == 'DELETE':
-        
-#     # return JsonResponse({"error": "Invalid method"}, status=405)
 
