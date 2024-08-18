@@ -15,7 +15,7 @@ class App(models.Model):
         ('offline', 'Offline'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
     state = models.CharField(max_length=10, choices=STATE_CHOICES, default='offline')
     size = models.PositiveIntegerField()
 
