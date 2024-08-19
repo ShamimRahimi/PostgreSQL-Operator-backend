@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import App, Token
+from .models import App
 import json
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -11,6 +11,9 @@ VALID_STATES = {"starting", "running", "error", "offline"}
 @csrf_exempt
 def create(request):
     if request.method == 'POST':
+        if not request.user:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        
         if len(request.body) > MAX_DATA_SIZE:
             return JsonResponse({"error": "Payload too large"}, status=400)
         try:
@@ -30,7 +33,7 @@ def create(request):
         if size is None or not isinstance(size, int) or size <= 0:
             return JsonResponse({"error": "Invalid 'size' field. Must be a positive integer."}, status=400)
 
-        app = App(name=name, size=size, state=state)
+        app = App(name=name, size=size, state=state, user=request.user)
         app.save()
 
         response_data = {
@@ -38,6 +41,7 @@ def create(request):
                 'name': app.name,
                 'size': app.size,
                 'state': app.state,
+                'user': request.user.username,
                 'creation_time': app.creation_time
             }
 
@@ -49,9 +53,12 @@ def create(request):
 
 def dispatcher(request, app_id):
     if request.method == 'GET':
-        try:
-            app = App.objects.get(id=app_id)
-        except App.DoesNotExist:
+        if not request.user:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        
+        if App.objects.filter(id=app_id, user=request.user).exists():
+            app = App.objects.get(id=app_id, user=request.user)
+        else:
             return JsonResponse({"error": "App not found"}, status=404)
         
         response_data = {
@@ -59,13 +66,21 @@ def dispatcher(request, app_id):
             'name': app.name,
             'size': app.size,
             'state': app.state,
+            'user': app.user.username,
             'creation_time': app.creation_time
         }
 
         return JsonResponse(response_data, status=200)
     
     elif request.method == 'PUT':
-        app = App.objects.get(id=app_id)
+        if not request.user:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        
+        if App.objects.filter(id=app_id, user=request.user).exists():
+            app = App.objects.get(id=app_id, user=request.user)
+        else:
+            return JsonResponse({"error": "App not found"}, status=404)
+        
         data = json.loads(request.body)
         if data.get("size") is None or not isinstance(data.get("size"), int) or data.get("size") <= 0:
             return JsonResponse({"error": "Invalid 'size' field. Must be a positive integer."}, status=400)
@@ -78,13 +93,21 @@ def dispatcher(request, app_id):
             'name': app.name,
             'size': app.size,
             'state': app.state,
+            'user': app.user.username,
             'creation_time': app.creation_time,
         }
 
         return JsonResponse(response_data, status=200)
 
     elif request.method == 'DELETE':
-        app = App.objects.get(id=app_id)
+        if not request.user:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        
+        if App.objects.filter(id=app_id, user=request.user).exists():
+            app = App.objects.get(id=app_id, user=request.user)
+        else:
+            return JsonResponse({"error": "App not found"}, status=404)
+        
         app.delete()
         return JsonResponse({})
 
@@ -93,14 +116,17 @@ def dispatcher(request, app_id):
 
 def list(request):
     if request.method == 'GET':
-        apps = App.objects.all()
-
+        if not request.user:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        
+        apps = App.objects.filter(user=request.user)
         results = [
             {
                 'id': app.id,
                 'name': app.name,
                 'size': app.size,
                 'state': app.state,
+                'user': app.user.username,
                 'creation_time': app.creation_time,
             }
             for app in apps

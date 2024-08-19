@@ -9,7 +9,6 @@ from django.contrib.auth.models import User
 class Token(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     key = models.CharField(max_length=255, unique=True)
-    creation_time = models.DateTimeField(auto_now_add=True)
     expiration_time = models.DateTimeField()
 
     def is_expired(self):
@@ -19,4 +18,6 @@ class Token(models.Model):
     def generate_token(cls, user):
         key = uuid4()
         expiration_time = timezone.now() + timedelta(hours=1)
-        return cls.objects.create(user=user, key=key, expiration_time=expiration_time)
+        token = Token(user=user, key=key, expiration_time=expiration_time)
+        token.save()
+        return token

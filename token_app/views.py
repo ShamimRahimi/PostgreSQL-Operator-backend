@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from .models import Token
 import json
 from django.http import HttpResponse, JsonResponse
-from myapp.models
+
 # Create your views here.
 def login(request):
     if request.method == 'POST':
@@ -15,6 +15,7 @@ def login(request):
         user = authenticate(username=username, password=password)
         if user is not None:
             token = Token.generate_token(user)
+
             return JsonResponse({"token": token.key}, status=200)
         
         return JsonResponse({"error": "Invalid user"}, status=401)
@@ -39,4 +40,3 @@ def signup(request):
         return JsonResponse({"message": "User created successfully"}, status=201)
     
     return JsonResponse({"error": "Invalid method"}, status=405)
-    
