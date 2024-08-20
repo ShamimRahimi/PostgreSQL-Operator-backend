@@ -8,7 +8,7 @@ def create_pod(app):
     name = app.name
     id = app.id
     size = app.size
-    db_user = app.user.username
+    db_user = app.user.username #TODO
     db_password = app.user.password
     db_name = name
 
@@ -28,7 +28,7 @@ def create_pod(app):
 
     container = client.V1Container(
         name="postgres",
-        image="hub.hamdocker.ir/postgres:latest",
+        image="hub.hamdocker.ir/postgres",
         ports=[client.V1ContainerPort(container_port=5432)],
         volume_mounts=[client.V1VolumeMount(mount_path="/var/lib/postgresql/data", name="data-volume")],
         env=[

@@ -39,3 +39,23 @@ def signup(request):
         return JsonResponse({"message": "User created successfully"}, status=201)
     
     return JsonResponse({"error": "Invalid method"}, status=405)
+
+def logout(request):
+    if request.method == 'POST':
+        if not request.user:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+
+        token_key = request.headers.get('Authorization')
+        if token_key:
+            try:
+                token = Token.objects.get(key=token_key)
+                token.delete()
+            except Token.DoesNotExist:
+                return JsonResponse({"error": "Invalid token"}, status=401)
+
+        else:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+
+        return JsonResponse({"message": "User loged out successfully"}, status=201)
+    
+    return JsonResponse({"error": "Invalid method"}, status=405)

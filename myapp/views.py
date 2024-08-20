@@ -4,14 +4,14 @@ from myapp import kube_client
 from .models import App
 import json
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-# import kube_client
+from kubernetes.client.exceptions import ApiException
 
 MAX_DATA_SIZE = 1024 
 VALID_STATES = {"starting", "running", "error", "offline"}
 
-# Create your views here.
-@csrf_exempt
+config.load_kube_config()
+v1 = client.CoreV1Api()
+
 def create(request):
     if request.method == 'POST':
         if not request.user:
@@ -38,8 +38,8 @@ def create(request):
 
         app = App(name=name, size=size, state=state, user=request.user)
         app.save()
-        state = kube_client.create_pod(app)
-        print(state)
+        kube_client.create_pod(app)
+
 
         response_data = {
                 'id': app.id,
@@ -66,10 +66,14 @@ def dispatcher(request, app_id):
         else:
             return JsonResponse({"error": "App not found"}, status=404)
         
-        config.load_kube_config()
-        v1 = client.CoreV1Api()
-        pod = v1.read_namespaced_pod(name=f"{app.name}-{app.id}", namespace="django-app")
-
+        pod_name = f"{app.name}-{app.id}"
+        try:
+            pod = v1.read_namespaced_pod(name=f"{app.name}-{app.id}", namespace="django-app")
+        except ApiException as e:
+            if e.status == 404:
+                app.delete()
+                return JsonResponse({"error": "Pod does not exist."}, status=400)
+            
         response_data = {
             'id': app.id,
             'name': app.name,
@@ -95,8 +99,25 @@ def dispatcher(request, app_id):
         if data.get("size") is None or not isinstance(data.get("size"), int) or data.get("size") <= 0:
             return JsonResponse({"error": "Invalid 'size' field. Must be a positive integer."}, status=400)
         
+        pvc_name = f"{app.name}-{app.id}-pvc"
+        pvc = v1.read_namespaced_persistent_volume_claim(name=pvc_name, namespace="django-app")
+        pvc.spec.resources.requests['storage'] = f'{data.get("size")}Gi'
+        v1.patch_namespaced_persistent_volume_claim(name=pvc_name, namespace="django-app", body=pvc)
+
         app.size = data.get("size")
         app.save()
+
+        return JsonResponse({
+            "message": "PVC size updated successfully.",
+            "pvc_name": pvc_name,
+            "new_size": data.get("size")
+        }, status=200)
+        # try:
+        
+        # except ApiException as e:
+        #     if e.status == 404:
+        #         return JsonResponse({"error": "PVC not found."}, status=404)
+
 
         response_data = {
             'id': app.id,
@@ -109,6 +130,7 @@ def dispatcher(request, app_id):
 
         return JsonResponse(response_data, status=200)
 
+
     elif request.method == 'DELETE':
         if not request.user:
             return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -118,6 +140,15 @@ def dispatcher(request, app_id):
         else:
             return JsonResponse({"error": "App not found"}, status=404)
         
+        pod_name = f"{app.name}-{app.id}"
+        pvc_name = f"{app.name}-{app.id}-pvc"
+        try:
+            v1.delete_namespaced_pod(namespace="django-app", name=pod_name)
+            v1.delete_namespaced_persistent_volume_claim(namespace="django-app", name=pvc_name)
+        except ApiException as e:
+            if e.status == 404:
+                return JsonResponse({"error": "Pod does not exist."}, status=400)
+       
         app.delete()
         return JsonResponse({})
 
@@ -130,17 +161,30 @@ def list(request):
             return JsonResponse({"error": "Unauthorized"}, status=401)
         
         apps = App.objects.filter(user=request.user)
-        results = [
-            {
+        print(apps)
+        results = []
+        for app in apps:
+            pod_name = f"{app.name}-{app.id}"
+            try:
+                pod = v1.read_namespaced_pod(name=pod_name, namespace="django-app")
+                pod_status = pod.status.phase
+            except ApiException as e:
+                if e.status == 404:
+                    app.delete()
+                    continue
+
+            # v1.create_namespaced_
+            
+            results.append({
                 'id': app.id,
                 'name': app.name,
                 'size': app.size,
-                'state': app.state,
+                'pod name': pod_name,
+                'state': pod_status,
                 'user': app.user.username,
                 'creation_time': app.creation_time,
-            }
-            for app in apps
-        ]
+            })
 
+        
         return JsonResponse({"results": results})
     return JsonResponse({"error": "Invalid method"}, status=405)
