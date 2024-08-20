@@ -3,9 +3,8 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from .models import Token
 import json
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 
-# Create your views here.
 def login(request):
     if request.method == 'POST':
         data = json.loads(request.body)

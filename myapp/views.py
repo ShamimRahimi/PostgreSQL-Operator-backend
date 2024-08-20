@@ -1,8 +1,11 @@
 from django.shortcuts import render
+from kubernetes import client, config
+from myapp import kube_client
 from .models import App
 import json
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+# import kube_client
 
 MAX_DATA_SIZE = 1024 
 VALID_STATES = {"starting", "running", "error", "offline"}
@@ -35,6 +38,8 @@ def create(request):
 
         app = App(name=name, size=size, state=state, user=request.user)
         app.save()
+        state = kube_client.create_pod(app)
+        print(state)
 
         response_data = {
                 'id': app.id,
@@ -61,13 +66,18 @@ def dispatcher(request, app_id):
         else:
             return JsonResponse({"error": "App not found"}, status=404)
         
+        config.load_kube_config()
+        v1 = client.CoreV1Api()
+        pod = v1.read_namespaced_pod(name=f"{app.name}-{app.id}", namespace="django-app")
+
         response_data = {
             'id': app.id,
             'name': app.name,
             'size': app.size,
-            'state': app.state,
+            'state': pod.status.phase,
             'user': app.user.username,
-            'creation_time': app.creation_time
+            'creation_time': app.creation_time,
+            'pod name': f"{app.name}-{app.id}"
         }
 
         return JsonResponse(response_data, status=200)
