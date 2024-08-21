@@ -1,23 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
-class App(models.Model):
-    name = models.CharField(max_length=255)
-    creation_time = models.DateTimeField(auto_now_add=True)
-    STATE_CHOICES = [
+STATE_CHOICES = [
         ('starting', 'Starting'),
         ('running', 'Running'),
         ('error', 'Error'),
         ('offline', 'Offline'),
     ]
 
+class App(models.Model):
+    name = models.CharField(max_length=255)
+    creation_time = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
     state = models.CharField(max_length=10, choices=STATE_CHOICES, default='offline')
     size = models.PositiveIntegerField()
 
     def __str__(self):
         return self.name
-    
-
-
