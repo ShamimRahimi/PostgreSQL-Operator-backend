@@ -14,7 +14,7 @@ def validate_request(request, method):
     return None
 
 def parse_json_request(request):
-    if len(request.body) > 1024:
+    if len(request.body) > 1024 * 1024:
         return JsonResponse({"error": "Payload too large"}, status=400)
     try:
         return json.loads(request.body)
@@ -40,8 +40,9 @@ def get_app_or_404(app_id, user):
     
 def read_pod_status(app, v1):
     pod_name = f"{app.name}-{app.id}-0"
+    print(pod_name)
     try:
-        pod = v1.read_namespaced_pod(name=pod_name, namespace="hamamooz")
+        pod = v1.read_namespaced_pod(name=pod_name, namespace="django-app")
         return pod.status.phase
     except ApiException as e:
         if e.status == 404:

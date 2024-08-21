@@ -5,10 +5,9 @@ from .models import App
 from django.http import JsonResponse
 from kubernetes.client.exceptions import ApiException
 
-MAX_DATA_SIZE = 1024 
-VALID_STATES = {"starting", "running", "error", "offline"}
+MAX_DATA_SIZE = 1024 * 1024
 
-config.load_kube_config(config_file="~/hamamouz-test-config")
+config.load_kube_config(config_file="~/cluster-config.yaml")
 v1 = client.CoreV1Api()
 apps_v1 = client.AppsV1Api()
 
@@ -23,16 +22,16 @@ def create(request):
     if isinstance(data, JsonResponse):
         return data
 
-    name = data.get("name", "").strip()
+    name = data.get("name")
     state = data.get("state", "offline")
     size = data.get("size")
 
-    if not name or state not in models.STATE_CHOICES or not isinstance(size, int) or size <= 0:
+    if not name or not isinstance(size, int) or size <= 0:
         return JsonResponse({"error": "Invalid input fields"}, status=400)
 
     app = App(name=name, size=size, state=state, user=request.user)
     app.save()
-    kube_client.create_statefulset_and_pvc(app)
+    kube_client.create_pod(app)
 
     return JsonResponse(Utilities.build_response_data(app), status=200)
 
@@ -58,9 +57,9 @@ def dispatcher(request, app_id):
             return data
         
         pvc_name = f"{app.name}-{app.id}-pvc"
-        pvc = v1.read_namespaced_persistent_volume_claim(name=pvc_name, namespace="hamamooz")
+        pvc = v1.read_namespaced_persistent_volume_claim(name=pvc_name, namespace="django-app")
         pvc.spec.resources.requests['storage'] = f'{data.get("size")}Gi'
-        v1.patch_namespaced_persistent_volume_claim(name=pvc_name, namespace="hamamooz", body=pvc)
+        v1.patch_namespaced_persistent_volume_claim(name=pvc_name, namespace="django-app", body=pvc)
 
         app.size = data.get("size")
         app.save()
@@ -70,8 +69,8 @@ def dispatcher(request, app_id):
 
     elif request.method == 'DELETE':
         try:
-            apps_v1.delete_namespaced_stateful_set(namespace="hamamooz", name=f"{app.name}-{app.id}")
-            v1.delete_namespaced_persistent_volume_claim(namespace="hamamooz", name=f"{app.name}-{app.id}-pvc")
+            apps_v1.delete_namespaced_stateful_set(namespace="django-app", name=f"{app.name}-{app.id}")
+            v1.delete_namespaced_persistent_volume_claim(namespace="django-app", name=f"{app.name}-{app.id}-pvc")
         except ApiException as e:
             if e.status == 404:
                 return JsonResponse({"error": "Pod or PVC does not exist."}, status=400)
@@ -95,4 +94,4 @@ def list(request):
         results.append(Utilities.build_response_data(app, pod_status))
 
     
-    return JsonResponse({"results": results}, statue=200)
+    return JsonResponse({"results": results}, status=200)

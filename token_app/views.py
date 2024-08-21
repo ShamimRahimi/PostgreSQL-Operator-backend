@@ -2,12 +2,15 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from .models import Token
+from myapp import Utilities
 import json
 from django.http import JsonResponse
 
 def login(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
+        data = Utilities.parse_json_request(request)
+        if isinstance(data, JsonResponse):
+            return data
         username = data.get("username")
         password = data.get("password")
 
@@ -24,7 +27,10 @@ def login(request):
 
 def signup(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
+        data = Utilities.parse_json_request(request)
+        if isinstance(data, JsonResponse):
+            return data
+        
         username = data.get("username")
         password = data.get("password")
 
@@ -41,21 +47,18 @@ def signup(request):
     return JsonResponse({"error": "Invalid method"}, status=405)
 
 def logout(request):
-    if request.method == 'POST':
-        if not request.user:
-            return JsonResponse({"error": "Unauthorized"}, status=401)
+    Utilities.validate_request(request, 'POST')
 
-        token_key = request.headers.get('Authorization')
-        if token_key:
-            try:
-                token = Token.objects.get(key=token_key)
-                token.delete()
-            except Token.DoesNotExist:
-                return JsonResponse({"error": "Invalid token"}, status=401)
+    token_key = request.headers.get('Authorization')
+    if token_key:
+        try:
+            token = Token.objects.get(key=token_key)
+            token.delete()
+        except Token.DoesNotExist:
+            return JsonResponse({"error": "Invalid token"}, status=401)
 
-        else:
-            return JsonResponse({"error": "Unauthorized"}, status=401)
+    else:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
 
-        return JsonResponse({"message": "User loged out successfully"}, status=201)
+    return JsonResponse({"message": "User loged out successfully"}, status=201)
     
-    return JsonResponse({"error": "Invalid method"}, status=405)
