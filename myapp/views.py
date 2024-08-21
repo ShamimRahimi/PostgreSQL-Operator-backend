@@ -73,9 +73,8 @@ def dispatcher(request, app_id):
             v1.delete_namespaced_persistent_volume_claim(namespace="django-app", name=f"{app.name}-{app.id}-pvc")
         except ApiException as e:
             if e.status == 404:
-                return JsonResponse({"error": "Pod or PVC does not exist."}, status=400)
+                app.delete()
 
-        app.delete()
         return JsonResponse({}, status=204)
 
     return JsonResponse({"error": "Invalid method"}, status=405)
