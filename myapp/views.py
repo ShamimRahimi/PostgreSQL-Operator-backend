@@ -7,7 +7,7 @@ from kubernetes.client.exceptions import ApiException
 
 MAX_DATA_SIZE = 1024 * 1024
 
-config.load_kube_config(config_file="~/cluster-config.yaml")
+config.load_incluster_config()
 v1 = client.CoreV1Api()
 apps_v1 = client.AppsV1Api()
 

@@ -27,7 +27,11 @@ SECRET_KEY = 'django-insecure-jkz@jhaxk*zv30$3a41j&f5o6lh$l%5elo$v%v=+9on4-m)_va
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.umrc.ir', 
+]
 
 
 # Application definition
@@ -84,11 +88,11 @@ environ.Env.read_env()
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='5432'),
+        'NAME': os.getenv('DB_NAME', 'default_db_name'),
+        'USER': os.getenv('DB_USER', 'default_db_user'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'default_db_password'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -127,7 +131,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+# Define the directory where static files will be collected
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Define the URL that serves the static files
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

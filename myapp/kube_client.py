@@ -11,8 +11,8 @@ def create_pod(app):
     db_password = app.user.password
     db_name = name
 
-    config.load_kube_config(config_file="~/cluster-config.yaml")
-
+    # config.load_kube_config(config_file="~/cluster-config.yaml")
+    config.load_incluster_config()
     v1 = client.CoreV1Api()
     apps_v1 = client.AppsV1Api()
 
