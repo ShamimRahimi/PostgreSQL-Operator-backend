@@ -7,6 +7,7 @@ from kubernetes.client.exceptions import ApiException
 
 MAX_DATA_SIZE = 1024 * 1024
 
+# config.load_kube_config(config_file="~/cluster-config.yaml")
 config.load_incluster_config()
 v1 = client.CoreV1Api()
 apps_v1 = client.AppsV1Api()
@@ -90,7 +91,8 @@ def list(request):
         pod_status = Utilities.read_pod_status(app, v1)
         if isinstance(pod_status, JsonResponse):
             continue
-        results.append(Utilities.build_response_data(app, pod_status))
+        if pod_status != "Deleted":
+            results.append(Utilities.build_response_data(app, pod_status))
 
     
     return JsonResponse({"results": results}, status=200)

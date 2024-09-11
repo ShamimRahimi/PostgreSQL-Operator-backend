@@ -11,6 +11,18 @@ def create_pod(app):
     db_password = app.user.password
     db_name = name
 
+    # def load_kube_config_with_token(token):
+    #     configuration = client.Configuration()
+    #     configuration.host = "https://188.121.121.38:6443"
+    #     configuration.ssl_ca_cert = "./ca.crt"
+    #     configuration.verify_ssl = True
+    #     configuration.api_key = {"authorization": f"Bearer {token}"}
+
+    #     client.Configuration.set_default(configuration)
+
+    # token = "4b8d5c3dbc87283bed1bb43fc30b08efaca7ee8a0349d232f538cc2d9d3186cc"
+    # load_kube_config_with_token(token)
+
     # config.load_kube_config(config_file="~/cluster-config.yaml")
     config.load_incluster_config()
     v1 = client.CoreV1Api()
@@ -72,11 +84,11 @@ def create_pod(app):
     try:
         v1.create_namespaced_persistent_volume_claim(namespace="django-app", body=pvc)
         print(f"PVC {name}-{id}-pvc created.")
-    except client.exceptions.ApiException as e:
+    except client.exceptions as e:
         print(f"Error creating PVC: {e}")
 
     try:
         apps_v1.create_namespaced_stateful_set(namespace="django-app", body=statefulset)
         print(f"StatefulSet {name}-{id} created.")
-    except client.exceptions.ApiException as e:
+    except client.exceptions as e:
         print(f"Error creating StatefulSet: {e}")

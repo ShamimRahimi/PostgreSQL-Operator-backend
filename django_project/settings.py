@@ -27,11 +27,7 @@ SECRET_KEY = 'django-insecure-jkz@jhaxk*zv30$3a41j&f5o6lh$l%5elo$v%v=+9on4-m)_va
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '.umrc.ir', 
-]
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -44,11 +40,34 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'myapp',
-    'token_app'
+    'token_app',
+    'corsheaders'
+]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8000', 
+    'http://shamim.umrc.ir',
+]
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+]
+
+CORS_ALLOW_HEADERS = [
+    'Authorization',
+    'Content-Type',
+    'X-CSRFToken',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'myapp.metrics_middleware.MetricsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
@@ -85,14 +104,16 @@ WSGI_APPLICATION = 'django_project.wsgi.application'
 env = environ.Env()
 environ.Env.read_env()
 
+APP_VERSION = os.getenv('APP_VERSION')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'default_db_name'),
-        'USER': os.getenv('DB_USER', 'default_db_user'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'default_db_password'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT':  os.getenv('DB_PORT')
     }
 }
 
