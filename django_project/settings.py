@@ -63,7 +63,7 @@ CORS_ALLOW_HEADERS = [
     'X-CSRFToken',
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE = [ 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
