@@ -26,8 +26,8 @@ To deploy the PostgreSQL operator on your Kubernetes cluster:
 
 1. Clone this repository:
     ```bash
-    git clone https://github.com/yourusername/your-repository.git
-    cd your-repository
+    git clone https://github.com/ShamimRahimi/Postgresql-Operator-backend.git
+    cd Postgresql-Operator-backend
     ```
 
 2. Install the project using the Docker file:
